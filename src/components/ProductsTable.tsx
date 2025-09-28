@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export default function ProductsTable() {
-  const { products, deleteProduct, updateProduct } = useApp();
+  const { products, deleteProduct } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
@@ -41,7 +41,6 @@ export default function ProductsTable() {
       return matchesSearch && matchesStatus && matchesLocation;
     });
 
-    // ترتيب المنتجات
     filtered.sort((a, b) => {
       let aValue: any = a[sortBy as keyof typeof a];
       let bValue: any = b[sortBy as keyof typeof b];
@@ -51,20 +50,14 @@ export default function ProductsTable() {
         bValue = new Date(bValue).getTime();
       }
 
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      if (sortOrder === 'asc') return aValue > bValue ? 1 : -1;
+      else return aValue < bValue ? 1 : -1;
     });
 
     return filtered;
   }, [products, searchTerm, statusFilter, locationFilter, sortBy, sortOrder]);
 
-  // الحصول على قائمة مواقع التخزين الفريدة
-  const uniqueLocations = useMemo(() => {
-    return Array.from(new Set(products.map(p => p.storage_location)));
-  }, [products]);
+  const uniqueLocations = useMemo(() => Array.from(new Set(products.map(p => p.storage_location))), [products]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -105,23 +98,15 @@ export default function ProductsTable() {
     const today = new Date();
     const expiry = new Date(expiryDate);
     const diffTime = expiry.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const handleDelete = async (productId: string, productName: string) => {
     try {
       await deleteProduct(productId);
-      toast({
-        title: "تم حذف المنتج",
-        description: `تم حذف ${productName} بنجاح`,
-      });
+      toast({ title: "تم حذف المنتج", description: `تم حذف ${productName} بنجاح` });
     } catch (error) {
-      toast({
-        title: "خطأ في الحذف",
-        description: "حدث خطأ أثناء حذف المنتج",
-        variant: "destructive",
-      });
+      toast({ title: "خطأ في الحذف", description: "حدث خطأ أثناء حذف المنتج", variant: "destructive" });
     }
   };
 
@@ -149,10 +134,7 @@ export default function ProductsTable() {
     link.click();
     document.body.removeChild(link);
 
-    toast({
-      title: "تم تصدير البيانات",
-      description: "تم تصدير قائمة المنتجات بنجاح",
-    });
+    toast({ title: "تم تصدير البيانات", description: "تم تصدير قائمة المنتجات بنجاح" });
   };
 
   return (
@@ -176,24 +158,14 @@ export default function ProductsTable() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* أدوات البحث والفلترة */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="البحث في المنتجات..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10 text-right"
-                />
-              </div>
+            <div className="flex-1 relative">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input placeholder="البحث في المنتجات..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pr-10 text-right" />
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="فلترة حسب الحالة" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="فلترة حسب الحالة" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الحالات</SelectItem>
                 <SelectItem value="active">نشط</SelectItem>
@@ -203,14 +175,10 @@ export default function ProductsTable() {
             </Select>
 
             <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="فلترة حسب الموقع" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="فلترة حسب الموقع" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع المواقع</SelectItem>
-                {uniqueLocations.map(location => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
+                {uniqueLocations.map(location => <SelectItem key={location} value={location}>{location}</SelectItem>)}
               </SelectContent>
             </Select>
 
@@ -219,9 +187,7 @@ export default function ProductsTable() {
               setSortBy(field);
               setSortOrder(order as 'asc' | 'desc');
             }}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="ترتيب حسب" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="ترتيب حسب" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="name-asc">الاسم (أ-ي)</SelectItem>
                 <SelectItem value="name-desc">الاسم (ي-أ)</SelectItem>
@@ -233,16 +199,12 @@ export default function ProductsTable() {
             </Select>
           </div>
 
-          {/* الجدول */}
           {filteredAndSortedProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد منتجات</h3>
               <p className="text-gray-500">
-                {products.length === 0 
-                  ? 'لم يتم إضافة أي منتجات بعد'
-                  : 'لا توجد منتجات تطابق معايير البحث'
-                }
+                {products.length === 0 ? 'لم يتم إضافة أي منتجات بعد' : 'لا توجد منتجات تطابق معايير البحث'}
               </p>
             </div>
           ) : (
@@ -272,9 +234,7 @@ export default function ProductsTable() {
                             />
                             <div>
                               <p className="font-medium">{product.name}</p>
-                              <p className="text-sm text-gray-500">
-                                أضيف في {formatDate(product.created_at)}
-                              </p>
+                              <p className="text-sm text-gray-500">أضيف في {formatDate(product.created_at)}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -286,17 +246,12 @@ export default function ProductsTable() {
                               <p className="text-sm text-gray-500">
                                 {daysUntilExpiry < 0 
                                   ? `منتهي منذ ${Math.abs(daysUntilExpiry)} يوم`
-                                  : `${daysUntilExpiry} يوم متبقي`
-                                }
+                                  : `${daysUntilExpiry} يوم متبقي`}
                               </p>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="font-medium">
-                            {product.quantity}
-                          </Badge>
-                        </TableCell>
+                        <TableCell><Badge variant="outline" className="font-medium">{product.quantity}</Badge></TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2 space-x-reverse">
                             <MapPin className="h-4 w-4 text-gray-400" />
@@ -305,28 +260,15 @@ export default function ProductsTable() {
                         </TableCell>
                         <TableCell>
                           <Badge className={`${getStatusColor(product.status)} flex items-center space-x-1 space-x-reverse w-fit`}>
-                            {getStatusIcon(product.status)}
-                            <span>{getStatusText(product.status)}</span>
+                            {getStatusIcon(product.status)}<span>{getStatusText(product.status)}</span>
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2 space-x-reverse">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center space-x-1 space-x-reverse"
-                            >
-                              <Edit className="h-3 w-3" />
-                              <span>تعديل</span>
-                            </Button>
-                            
+                            <Button variant="outline" size="sm" className="flex items-center space-x-1 space-x-reverse"><Edit className="h-3 w-3" /><span>تعديل</span></Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="flex items-center space-x-1 space-x-reverse text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
+                                <Button variant="outline" size="sm" className="flex items-center space-x-1 space-x-reverse text-red-600 hover:text-red-700 hover:bg-red-50">
                                   <Trash2 className="h-3 w-3" />
                                   <span>حذف</span>
                                 </Button>
@@ -334,19 +276,11 @@ export default function ProductsTable() {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    هل أنت متأكد من حذف المنتج "{product.name}"؟ 
-                                    هذا الإجراء لا يمكن التراجع عنه.
-                                  </AlertDialogDescription>
+                                  <AlertDialogDescription>هل أنت متأكد من حذف المنتج "{product.name}"؟ هذا الإجراء لا يمكن التراجع عنه.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(product.id, product.name)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    حذف
-                                  </AlertDialogAction>
+                                  <AlertDialogAction onClick={() => handleDelete(product.id, product.name)} className="bg-red-600 hover:bg-red-700">حذف</AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
